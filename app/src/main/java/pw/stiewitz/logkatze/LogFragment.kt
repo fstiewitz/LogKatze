@@ -23,7 +23,7 @@ class LogFragment : Fragment() {
             mainActivity.logFragment = this
             (mainActivity.applicationContext as MyApplication).lastError.observe(this) { exception ->
                 exception?.message?.let {
-                    adapter.addItem(LogEntry(it))
+                    adapter.addItem(LogEntry.fromLine(it))
                 }
             }
         }

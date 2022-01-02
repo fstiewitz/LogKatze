@@ -4,14 +4,45 @@
   ~ Licensed under the EUPL-1.2
   -->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/linearLayout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal">
+    android:paddingTop="5dp"
+    android:paddingBottom="5dp">
+
+    <TextView
+        android:id="@+id/priority"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:minEms="4"
+        android:text="ERROR"
+        android:textColor="@color/design_default_color_error"
+        android:textStyle="bold"
+        app:layout_constraintBaseline_toBaselineOf="@+id/component"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:id="@+id/component"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingEnd="5dp"
+        android:text="TextView"
+        android:textColor="@color/black"
+        app:layout_constraintStart_toEndOf="@+id/priority"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/text"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="TextView" />
-</LinearLayout>
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:text="TextView"
+        app:layout_constraintBaseline_toBaselineOf="@+id/component"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/component" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

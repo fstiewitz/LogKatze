@@ -19,16 +19,19 @@ class MainActivity : AppCompatActivity() {
         (applicationContext as MyApplication).rootLogCallback =
             object : RootLogCatService.Callback {
                 override fun rawLine(s: String, isInitial: Boolean): Boolean {
+                    return false
+                }
+
+                override fun logged(e: LogEntry, isInitial: Boolean) {
                     CoroutineScope(Dispatchers.Main).launch {
                         logFragment?.adapter?.discardOld = isInitial
-                        logFragment?.adapter?.addItem(LogEntry(s))
+                        logFragment?.adapter?.addItem(e)
                     }
-                    return true
                 }
 
                 override fun error(e: Exception) {
                     CoroutineScope(Dispatchers.Main).launch {
-                        e.message?.let { LogEntry(it) }?.let { logFragment?.adapter?.addItem(it) }
+                        e.message?.let { LogEntry.fromLine(it) }?.let { logFragment?.adapter?.addItem(it) }
                     }
                 }
             }
