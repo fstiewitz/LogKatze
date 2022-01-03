@@ -50,6 +50,12 @@ class NotificationRuleListFragment : Fragment() {
         val priorityEditText = v.findViewById<EditText>(R.id.priorityText)
         val contentText = v.findViewById<EditText>(R.id.contentText)
 
+        notificationRule?.let {
+            componentEditText.setText(it.component)
+            priorityEditText.setText(it.priority)
+            contentText.setText(it.contentRegex)
+        }
+
         AlertDialog.Builder(requireContext())
             .setView(v)
             .setPositiveButton(if (notificationRule != null) "Update" else "Add") { _, _ ->
