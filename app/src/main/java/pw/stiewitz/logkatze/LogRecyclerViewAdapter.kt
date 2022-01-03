@@ -40,14 +40,52 @@ class LogRecyclerViewAdapter : RecyclerView.Adapter<LogRecyclerViewAdapter.ViewH
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val priorityView: TextView = itemView.findViewById(R.id.priority)
         val componentView: TextView = itemView.findViewById(R.id.component)
+        val processView: TextView = itemView.findViewById(R.id.process)
         val textView: TextView = itemView.findViewById(R.id.text)
 
         init {
-            textView.setOnClickListener {
+            itemView.setOnClickListener {
                 val item = items[adapterPosition]
+                val view = LayoutInflater.from(itemView.context)
+                    .inflate(R.layout.dialog_entry, null, false)
+
+                view.findViewById<TextView>(R.id.priority).let {
+                    it.text = item.priority.name.first().toString()
+                    when (item.priority) {
+                        LogEntry.Priority.VERBOSE -> {
+                            it.setBackgroundColor(Color.GRAY)
+                            it.setTextColor(Color.BLACK)
+                        }
+                        LogEntry.Priority.DEBUG -> {
+                            it.setBackgroundColor(Color.BLUE)
+                            it.setTextColor(Color.WHITE)
+                        }
+                        LogEntry.Priority.INFO -> {
+                            it.setBackgroundColor(Color.WHITE)
+                            it.setTextColor(Color.BLACK)
+                        }
+                        LogEntry.Priority.WARNING -> {
+                            it.setBackgroundColor(Color.YELLOW)
+                            it.setTextColor(Color.BLACK)
+                        }
+                        LogEntry.Priority.ERROR -> {
+                            it.setBackgroundColor(Color.RED)
+                            it.setTextColor(Color.WHITE)
+                        }
+                        LogEntry.Priority.FATAL -> {
+                            it.setBackgroundColor(Color.RED)
+                            it.setTextColor(Color.WHITE)
+                        }
+                    }
+                }
+                view.findViewById<TextView>(R.id.processName).let {
+                    it.text = item.process ?: "PID: ${item.pid.toString()}"
+                }
+                view.findViewById<TextView>(R.id.component).text = item.component
+                view.findViewById<TextView>(R.id.content).text = item.text.joinToString("\n")
+
                 AlertDialog.Builder(itemView.context)
-                    .setMessage(item.text.joinToString("\n"))
-                    .setTitle("${item.pid}:${item.tid} - ${item.component}")
+                    .setView(view)
                     .setPositiveButton("OK") { _, _ -> }
                     .show()
             }
@@ -80,6 +118,9 @@ class LogRecyclerViewAdapter : RecyclerView.Adapter<LogRecyclerViewAdapter.ViewH
             }
         )
         holder.componentView.text = items[position].component
+        holder.processView.text = items[position].process ?: ""
+        holder.processView.visibility =
+            if (items[position].process != null) View.VISIBLE else View.GONE
         holder.textView.text = items[position].text.firstOrNull() ?: "No message"
     }
 

@@ -23,9 +23,15 @@ class RootLogCatService : Service(), Runnable {
     @Inject
     lateinit var logKatzeDatabase: LogKatzeDatabase
     private var thread: Thread? = null
-    lateinit var notification: Notification
+    private lateinit var notification: Notification
 
     private var rules: List<CompiledRule> = ArrayList()
+    private var initial: Boolean = true
+
+    private val pidResolver = PIDResolver(this) {
+        (applicationContext as MyApplication).rootLogCallback?.logged(it, initial)
+        processRules(it)
+    }
 
     data class CompiledRule(val rule: NotificationRule) {
         val contentRegex: Regex? =
@@ -59,6 +65,7 @@ class RootLogCatService : Service(), Runnable {
 
     override fun onDestroy() {
         super.onDestroy()
+        pidResolver.stop()
         (applicationContext as MyApplication).let {
             it.rootLogCatService = null
             it.serviceIsAlive.postValue(false)
@@ -122,7 +129,8 @@ class RootLogCatService : Service(), Runnable {
             while (true) {
                 val line = reader.readLine().trim()
                 app.rootLogCallback?.let { callback ->
-                    val initial = System.currentTimeMillis() < startTime + 3 * 1000
+                    val currentTime = System.currentTimeMillis()
+                    initial = currentTime < startTime + 3 * 1000
                     when {
                         currentEntry == null -> {
                             currentEntry = LogEntry.fromLine(line).let {
@@ -134,8 +142,7 @@ class RootLogCatService : Service(), Runnable {
                             currentEntry!!.text.add(line)
                         }
                         else -> {
-                            callback.logged(currentEntry!!, initial)
-                            processRules(currentEntry!!)
+                            pidResolver.scheduleEntryResolve(currentEntry!!)
                             currentEntry = null
                         }
                     }
@@ -173,7 +180,7 @@ class RootLogCatService : Service(), Runnable {
             .createPendingIntent()
     }
 
-    fun stopPendingIntent(): PendingIntent {
+    private fun stopPendingIntent(): PendingIntent {
         return stopIntent(this).let {
             PendingIntent.getService(this, 0, it, 0)
         }

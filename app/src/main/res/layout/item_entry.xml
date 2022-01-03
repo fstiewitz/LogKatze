@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
   ~ Copyright (c) 2022      Fabian Stiewitz <fabian (at) stiewitz.pw>
   ~ Licensed under the EUPL-1.2
   -->
@@ -13,36 +12,58 @@
     android:paddingTop="5dp"
     android:paddingBottom="5dp">
 
-    <TextView
-        android:id="@+id/priority"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:minEms="4"
-        android:text="ERROR"
-        android:textColor="@color/design_default_color_error"
-        android:textStyle="bold"
-        app:layout_constraintBaseline_toBaselineOf="@+id/component"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <TextView
-        android:id="@+id/component"
+    <LinearLayout
+        android:id="@+id/componentLayout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingEnd="5dp"
-        android:text="TextView"
-        android:textColor="@color/black"
-        app:layout_constraintStart_toEndOf="@+id/priority"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:orientation="vertical"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/priority"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minEms="4"
+                android:text="ERROR"
+                android:textColor="@color/design_default_color_error"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/component"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingEnd="5dp"
+                android:text="TextView"
+                android:textColor="@color/black" />
+        </LinearLayout>
+
+
+        <TextView
+            android:id="@+id/process"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="10dp"
+            android:text="TextView"
+            android:textColor="@color/black" />
+
+    </LinearLayout>
 
     <TextView
         android:id="@+id/text"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:ellipsize="end"
         android:maxLines="1"
         android:text="TextView"
-        app:layout_constraintBaseline_toBaselineOf="@+id/component"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/component" />
+        app:layout_constraintStart_toEndOf="@+id/componentLayout"
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

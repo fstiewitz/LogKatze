@@ -13,6 +13,7 @@ data class LogEntry(
     val component: String,
     var text: ArrayList<String>
 ) {
+    var process: String? = null
 
     enum class Priority {
         VERBOSE,
