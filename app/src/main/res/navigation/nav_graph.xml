@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ Copyright (c) 2022      Fabian Stiewitz <fabian (at) stiewitz.pw>
+  ~ Licensed under the EUPL-1.2
+  -->
+
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/logFragment">
+
+    <fragment
+        android:id="@+id/logFragment"
+        android:name="pw.stiewitz.logkatze.LogFragment"
+        android:label="LogKatze" />
+    <fragment
+        android:id="@+id/notificationRuleListFragment"
+        android:name="pw.stiewitz.logkatze.NotificationRuleListFragment"
+        android:label="Notification Rules" />
+    <fragment
+        android:id="@+id/constLogFragment"
+        android:name="pw.stiewitz.logkatze.ConstLogFragment"
+        android:label="Log" >
+        <argument
+            android:name="by-rule-hash"
+            app:argType="integer" />
+    </fragment>
+</navigation>

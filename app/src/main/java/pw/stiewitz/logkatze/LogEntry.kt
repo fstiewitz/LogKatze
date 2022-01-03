@@ -40,7 +40,8 @@ data class LogEntry(
             return LogEntry(0.0, 0, 0, Priority.VERBOSE, "", arrayListOf(line))
         }
 
-        private val metaRegex = Regex("\\s+(\\d+\\.?\\d*)\\s+(\\d+):\\s?(\\d+)\\s+(\\w+)/(\\w+)\\s*")
+        private val metaRegex =
+            Regex("\\s+(\\d+\\.?\\d*)\\s+(\\d+):\\s?(\\d+)\\s+(\\w+)/(\\w+)\\s*")
 
         private fun parseMetaLine(line: String): LogEntry {
             return metaRegex.matchEntire(line)?.let { match ->
