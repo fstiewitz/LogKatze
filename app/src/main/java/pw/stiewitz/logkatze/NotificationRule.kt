@@ -10,16 +10,18 @@ import dagger.Module
 import dagger.Provides
 import javax.inject.Singleton
 
-@Entity(primaryKeys = ["component", "priority", "contentRegex"])
+@Entity(primaryKeys = ["process", "component", "priority", "contentRegex"])
 data class NotificationRule(
+    val process: String,
     val component: String,
     val priority: String,
     val contentRegex: String
 ) {
     fun getNiceName(): String {
+        val c = if(process.isNotEmpty()) process else component
         val head =
-            if (component.isNotEmpty() && priority.isNotEmpty()) "$priority of $component"
-            else if (component.isNotEmpty()) component
+            if (c.isNotEmpty() && priority.isNotEmpty()) "$priority of $c"
+            else if (c.isNotEmpty()) c
             else if (priority.isNotEmpty()) priority
             else ""
 

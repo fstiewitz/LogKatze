@@ -39,6 +39,9 @@ class RootLogCatService : Service(), Runnable {
         val componentRegex: Regex? = if (rule.component.isNotEmpty()) Regex(
             rule.component.replace(".", "\\.").replace("*", ".*")
         ) else null
+        val processRegex: Regex? = if (rule.process.isNotEmpty()) Regex(
+            rule.process.replace(".", "\\.").replace("*", ".*")
+        ) else null
         val priority: LogEntry.Priority = when (rule.priority) {
             "verbose" -> LogEntry.Priority.VERBOSE
             "debug" -> LogEntry.Priority.DEBUG
@@ -120,8 +123,8 @@ class RootLogCatService : Service(), Runnable {
         val app = applicationContext as MyApplication
         try {
             updateRules()
-            //val reader = ProcessBuilder("su", "-c", "logcat -v long,printable,epoch").let {
-            val reader = ProcessBuilder("logcat", "-v", "long,printable,epoch").let {
+            val reader = ProcessBuilder("su", "-c", "logcat -v long,printable,epoch").let {
+            //val reader = ProcessBuilder("logcat", "-v", "long,printable,epoch").let {
                 it.start()
             }.inputStream.bufferedReader()
             val startTime = System.currentTimeMillis()
@@ -142,7 +145,7 @@ class RootLogCatService : Service(), Runnable {
                             currentEntry!!.text.add(line)
                         }
                         else -> {
-                            pidResolver.scheduleEntryResolve(currentEntry!!)
+                            if(!initial) pidResolver.scheduleEntryResolve(currentEntry!!)
                             currentEntry = null
                         }
                     }
@@ -212,17 +215,23 @@ class RootLogCatService : Service(), Runnable {
 
     private fun processRules(logEntry: LogEntry) {
         for (rule in rules) {
+            var processMatch = rule.processRegex == null
             var componentMatch = true
             var contentMatch = true
             val priorityMatch =
                 if (rule.rule.priority.isNotEmpty()) rule.priority == logEntry.priority else true
+            logEntry.process?.let { process ->
+                rule.processRegex?.matches(process)?.let {
+                    processMatch = it
+                }
+            }
             rule.componentRegex?.matches(logEntry.component)?.let {
                 componentMatch = it
             }
             rule.contentRegex?.matches(logEntry.text.joinToString("\n"))?.let {
                 contentMatch = it
             }
-            if (componentMatch && contentMatch && priorityMatch) {
+            if (processMatch && componentMatch && contentMatch && priorityMatch) {
                 notify(logEntry, rule.rule)
             }
         }

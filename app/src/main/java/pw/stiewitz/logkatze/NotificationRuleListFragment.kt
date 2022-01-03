@@ -5,13 +5,14 @@
 
 package pw.stiewitz.logkatze
 
+import android.app.ActivityManager
+import android.app.Application
 import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.EditText
-import android.widget.TextView
+import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -46,11 +47,21 @@ class NotificationRuleListFragment : Fragment() {
     fun makeDialog(notificationRule: NotificationRule?) {
         val v = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_rule, null, false)
 
+        val processEditText = v.findViewById<AutoCompleteTextView>(R.id.processText)
         val componentEditText = v.findViewById<EditText>(R.id.componentText)
         val priorityEditText = v.findViewById<EditText>(R.id.priorityText)
         val contentText = v.findViewById<EditText>(R.id.contentText)
 
+        requireActivity().packageManager.getInstalledPackages(0).map {
+            it.packageName
+        }.let {
+            ArrayAdapter(requireContext(), R.layout.item_package, it)
+        }.let {
+            processEditText.setAdapter(it)
+        }
+
         notificationRule?.let {
+            processEditText.setText(it.process)
             componentEditText.setText(it.component)
             priorityEditText.setText(it.priority)
             contentText.setText(it.contentRegex)
@@ -59,13 +70,14 @@ class NotificationRuleListFragment : Fragment() {
         AlertDialog.Builder(requireContext())
             .setView(v)
             .setPositiveButton(if (notificationRule != null) "Update" else "Add") { _, _ ->
+                val process = processEditText.text.toString().trim()
                 val component = componentEditText.text.toString().trim()
                 val priority = priorityEditText.text.toString().trim().lowercase()
                 val content = contentText.text.toString().trim()
 
-                if (component.isNotEmpty() || priority.isNotEmpty() || content.isNotEmpty()) {
+                if (process.isNotEmpty() || component.isNotEmpty() || priority.isNotEmpty() || content.isNotEmpty()) {
                     CoroutineScope(Dispatchers.IO).launch {
-                        NotificationRule(component, priority, content).let {
+                        NotificationRule(process, component, priority, content).let {
                             notificationRule?.let {
                                 logKatzeDatabase.notificationRuleDao().deleteAll(it)
                             }

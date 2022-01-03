@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ Copyright (c) 2022      Fabian Stiewitz <fabian (at) stiewitz.pw>
+  ~ Licensed under the EUPL-1.2
+  -->
+
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/packageName"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:minHeight="32dp"
+    android:paddingStart="10dp"
+    android:text="pw.stiewitz.logkatze"
+    android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+    android:textColor="@color/black">
+
+</TextView>
