@@ -5,46 +5,52 @@
 
 package pw.stiewitz.logkatze
 
-import android.app.ActivityManager
-import android.app.Application
 import android.content.Context
 import java.util.*
 import kotlin.collections.HashMap
 
 class PIDResolver(val context: Context, val onResolved: (LogEntry) -> Unit) {
     private var pidToAppName: Map<Int, String> = HashMap()
-    private var entryQueue: Queue<LogEntry> = LinkedList()
-    private val timer = Timer("PIDResolver").also {
-        it.schedule(object : TimerTask() {
-            override fun run() {
-                reload()
-                while (true) {
-                    val e = entryQueue.poll() ?: break
-                    resolveEntry(e)
-                    onResolved(e)
-                }
+    private val psProcess = ProcessBuilder("su").start()
+    private val output = psProcess.outputStream.writer()
+    private val input = psProcess.inputStream.bufferedReader()
+
+    init {
+        output.write("PS1=X\n")
+        output.flush()
+    }
+
+    private fun readPS(): ArrayList<String> {
+        output.write("ps -A -o PID,NAME;echo XX\n")
+        output.flush()
+        val out = ArrayList<String>()
+        while (true) {
+            val s = input.readLine().trim()
+            if (s == "XX") break
+            out.add(s)
+        }
+        return out
+    }
+
+    private fun reload() {
+        pidToAppName = readPS().map {
+            if (it.startsWith(" ")) listOf()
+            else it.split(" ")
+        }.filter { it.size == 2 }.mapNotNull { s ->
+            s[0].toIntOrNull()?.let {
+                Pair(it, s[1])
             }
-        }, 1000, 5 * 1000L)
-    }
-
-    fun stop() {
-        timer.cancel()
-    }
-
-    fun reload() {
-        val manager = context.getSystemService(Application.ACTIVITY_SERVICE) as ActivityManager
-        pidToAppName = manager.runningAppProcesses.map {
-            Pair(it.pid, it.processName)
-        }.toMap()
+        }
+            .toMap()
     }
 
     fun resolveEntry(entry: LogEntry) {
-        pidToAppName[entry.pid]?.let {
-            entry.process = it
+        if (pidToAppName.containsKey(entry.pid)) {
+            entry.process = pidToAppName[entry.pid]
+        } else {
+            reload()
+            entry.process = pidToAppName[entry.pid]
         }
-    }
-
-    fun scheduleEntryResolve(entry: LogEntry) {
-        entryQueue.offer(entry)
+        onResolved(entry)
     }
 }

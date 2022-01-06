@@ -18,7 +18,7 @@ data class NotificationRule(
     val contentRegex: String
 ) {
     fun getNiceName(): String {
-        val c = if(process.isNotEmpty()) process else component
+        val c = if (process.isNotEmpty()) process else component
         val head =
             if (c.isNotEmpty() && priority.isNotEmpty()) "$priority of $c"
             else if (c.isNotEmpty()) c

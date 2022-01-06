@@ -28,11 +28,6 @@ class RootLogCatService : Service(), Runnable {
     private var rules: List<CompiledRule> = ArrayList()
     private var initial: Boolean = true
 
-    private val pidResolver = PIDResolver(this) {
-        (applicationContext as MyApplication).rootLogCallback?.logged(it, initial)
-        processRules(it)
-    }
-
     data class CompiledRule(val rule: NotificationRule) {
         val contentRegex: Regex? =
             if (rule.contentRegex.isNotEmpty()) Regex(rule.contentRegex) else null
@@ -68,7 +63,6 @@ class RootLogCatService : Service(), Runnable {
 
     override fun onDestroy() {
         super.onDestroy()
-        pidResolver.stop()
         (applicationContext as MyApplication).let {
             it.rootLogCatService = null
             it.serviceIsAlive.postValue(false)
@@ -83,7 +77,7 @@ class RootLogCatService : Service(), Runnable {
         notification = NotificationCompat.Builder(this, "logCatServiceRunning")
             .setContentTitle("LogKatze")
             .setContentText("LogKatze is running")
-            .setSmallIcon(R.drawable.baseline_text_snippet_black_24dp)
+            .setSmallIcon(R.drawable.ic_service_notification)
             .setContentIntent(pendingIntent)
             .addAction(R.drawable.baseline_cancel_black_24dp, "Stop", stopPendingIntent())
             .setPriority(NotificationManager.IMPORTANCE_LOW)
@@ -122,32 +116,34 @@ class RootLogCatService : Service(), Runnable {
     override fun run() {
         val app = applicationContext as MyApplication
         try {
+            val pidResolver = PIDResolver(this) {
+                (applicationContext as MyApplication).rootLogCallback?.logged(it, initial)
+                processRules(it)
+            }
             updateRules()
             val reader = ProcessBuilder("su", "-c", "logcat -v long,printable,epoch").let {
-            //val reader = ProcessBuilder("logcat", "-v", "long,printable,epoch").let {
+                //val reader = ProcessBuilder("logcat", "-v", "long,printable,epoch").let {
                 it.start()
             }.inputStream.bufferedReader()
             val startTime = System.currentTimeMillis()
             var currentEntry: LogEntry? = null
             while (true) {
                 val line = reader.readLine().trim()
-                app.rootLogCallback?.let { callback ->
-                    val currentTime = System.currentTimeMillis()
-                    initial = currentTime < startTime + 3 * 1000
-                    when {
-                        currentEntry == null -> {
-                            currentEntry = LogEntry.fromLine(line).let {
-                                if (it.time == 0.0) null
-                                else it
-                            }
+                val currentTime = System.currentTimeMillis()
+                initial = currentTime < startTime + 1 * 1000
+                when {
+                    currentEntry == null -> {
+                        currentEntry = LogEntry.fromLine(line).let {
+                            if (it.time == 0.0) null
+                            else it
                         }
-                        line.isNotEmpty() -> {
-                            currentEntry!!.text.add(line)
-                        }
-                        else -> {
-                            if(!initial) pidResolver.scheduleEntryResolve(currentEntry!!)
-                            currentEntry = null
-                        }
+                    }
+                    line.isNotEmpty() -> {
+                        currentEntry.text.add(line)
+                    }
+                    else -> {
+                        if (!initial) pidResolver.resolveEntry(currentEntry)
+                        currentEntry = null
                     }
                 }
             }
@@ -195,7 +191,7 @@ class RootLogCatService : Service(), Runnable {
                 .setContentTitle(rule.getNiceName())
                 .setContentText(logEntry.text.firstOrNull() ?: "")
                 .setContentIntent(browseEntriesIntent(rule))
-                .setSmallIcon(R.drawable.baseline_notification_important_black_24dp)
+                .setSmallIcon(R.drawable.ic_show_notification)
                 .let {
                     NotificationData(
                         it,
