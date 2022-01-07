@@ -18,7 +18,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 class LogFragment : Fragment() {
     lateinit var recyclerView: RecyclerView
-    lateinit var adapter: LogRecyclerViewAdapter
+    var adapter: LogRecyclerViewAdapter? = null
     private lateinit var powerButton: FloatingActionButton
     private lateinit var scrollButton: FloatingActionButton
 
@@ -32,7 +32,7 @@ class LogFragment : Fragment() {
             (mainActivity.applicationContext as MyApplication).let { myApplication ->
                 myApplication.lastError.observe(this) { exception ->
                     exception?.message?.let {
-                        adapter.addItem(LogEntry.fromLine(it))
+                        adapter?.addItem(LogEntry.fromLine(it))
                     }
                 }
                 myApplication.serviceIsAlive.observe(this) {
@@ -66,7 +66,7 @@ class LogFragment : Fragment() {
         scrollButton = view.findViewById(R.id.scrollDownButton)
 
         powerButton.setOnClickListener {
-            adapter.clean()
+            adapter?.clean()
             RootLogCatService.startIntent(requireContext()).let {
                 PendingIntent.getService(requireContext(), 0, it, 0)
             }.send()
@@ -75,20 +75,29 @@ class LogFragment : Fragment() {
             if ((requireContext().applicationContext as MyApplication).rootLogCatService != null) View.GONE else View.VISIBLE
 
         scrollButton.setOnClickListener {
-            recyclerView.scrollToPosition(adapter.itemCount - 1)
+            adapter?.let {
+                recyclerView.scrollToPosition(it.itemCount - 1)
+            }
         }
 
         recyclerView.setOnScrollChangeListener { _, _, _, _, _ ->
-            val b =
-                (recyclerView.layoutManager as LinearLayoutManager).findLastCompletelyVisibleItemPosition() < adapter.itemCount - 20
-            scrollButton.visibility = if (b && adapter.itemCount > 30) View.VISIBLE else View.GONE
+            adapter?.let {
+                val b =
+                    (recyclerView.layoutManager as LinearLayoutManager).findLastCompletelyVisibleItemPosition() < it.itemCount - 20
+                scrollButton.visibility =
+                    if (b && it.itemCount > 30) View.VISIBLE else View.GONE
+            }
         }
 
-        adapter = LogRecyclerViewAdapter().also {
-            it.callbacks = object : LogRecyclerViewAdapter.Callback {
-                override fun itemAdded(entry: LogEntry) {
-                    if ((recyclerView.layoutManager as LinearLayoutManager).findLastVisibleItemPosition() == adapter.itemCount - 2) {
-                        recyclerView.scrollToPosition(adapter.itemCount - 1)
+        if (adapter == null) {
+            adapter = LogRecyclerViewAdapter().also { logRecyclerViewAdapter ->
+                logRecyclerViewAdapter.callbacks = object : LogRecyclerViewAdapter.Callback {
+                    override fun itemAdded(entry: LogEntry) {
+                        adapter?.let {
+                            if ((recyclerView.layoutManager as LinearLayoutManager).findLastVisibleItemPosition() == it.itemCount - 2) {
+                                recyclerView.scrollToPosition(it.itemCount - 1)
+                            }
+                        }
                     }
                 }
             }
