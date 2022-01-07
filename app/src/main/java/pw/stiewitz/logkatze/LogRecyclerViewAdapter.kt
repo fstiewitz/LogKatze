@@ -7,6 +7,7 @@ package pw.stiewitz.logkatze
 
 import android.app.AlertDialog
 import android.graphics.Color
+import android.text.method.ScrollingMovementMethod
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -79,10 +80,13 @@ class LogRecyclerViewAdapter : RecyclerView.Adapter<LogRecyclerViewAdapter.ViewH
                     }
                 }
                 view.findViewById<TextView>(R.id.processName).let {
-                    it.text = item.process ?: "PID: ${item.pid.toString()}"
+                    it.text = item.process ?: "PID: ${item.pid}"
                 }
                 view.findViewById<TextView>(R.id.component).text = item.component
-                view.findViewById<TextView>(R.id.content).text = item.text.joinToString("\n")
+                view.findViewById<TextView>(R.id.content).let {
+                    it.movementMethod = ScrollingMovementMethod()
+                    it.text = item.text.joinToString("\n")
+                }
 
                 AlertDialog.Builder(itemView.context)
                     .setView(view)
